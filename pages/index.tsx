@@ -16,8 +16,8 @@ export default function Home() {
     isLoading ? (
       <VStack>
         <Text>Waiting for Oracle to respond...</Text>
-        <PacmanLoader size={24} speedMultiplier={3} />
-        <BeatLoader size={20} speedMultiplier={3} />
+        <PacmanLoader size={24} speedMultiplier={2.5} />
+        <BeatLoader size={20} />
       </VStack>
     ) : (
       <Text>{message}</Text>
