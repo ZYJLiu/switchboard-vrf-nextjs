@@ -1,10 +1,27 @@
 import { Text } from "@chakra-ui/react"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useBalance } from "@/contexts/BalanceContext"
+import { useEffect } from "react"
+import { connection, solVaultPDA } from "@/utils/anchor"
+import { LAMPORTS_PER_SOL } from "@solana/web3.js"
 
 const Balance = () => {
   const { publicKey } = useWallet()
   const { vaultBalance, playerBalance } = useBalance()
+
+  useEffect(() => {
+    const requestAirdrop = async () => {
+      try {
+        if (vaultBalance < 1) {
+          await connection.requestAirdrop(solVaultPDA, 2 * LAMPORTS_PER_SOL)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    requestAirdrop()
+  }, [])
 
   return (
     <>

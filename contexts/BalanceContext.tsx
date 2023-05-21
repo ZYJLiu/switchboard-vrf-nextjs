@@ -42,10 +42,10 @@ export const BalanceProvider = ({
   const fetchBalance = useCallback(async () => {
     if (!publicKey) return
     const vaultBalance = await provider.connection.getBalance(solVaultPDA)
-    setVaultBalance(parseFloat((vaultBalance / LAMPORTS_PER_SOL).toFixed(3)))
+    setVaultBalance(parseFloat((vaultBalance / LAMPORTS_PER_SOL).toFixed(1)))
 
     const playerBalance = await provider.connection.getBalance(publicKey)
-    setPlayerBalance(parseFloat((playerBalance / LAMPORTS_PER_SOL).toFixed(3)))
+    setPlayerBalance(parseFloat((playerBalance / LAMPORTS_PER_SOL).toFixed(1)))
   }, [publicKey])
 
   // Effect to fetch balance when the component mounts

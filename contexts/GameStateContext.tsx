@@ -11,23 +11,23 @@ import { program, connection } from "@/utils/anchor"
 import * as anchor from "@coral-xyz/anchor"
 import { useBalance } from "@/contexts/BalanceContext"
 
-// Define the structure of the GameStateHome context state
+// Define the structure of the GameState context state
 type GameStateContextType = {
-  vrfClientKey: PublicKey | undefined
-  vrfClientState: any
+  gameStatePDA: PublicKey | undefined
+  gameStateData: any
   isLoading: boolean
   message: string
 }
 
 // Create the context with default values
 const GameStateContext = createContext<GameStateContextType>({
-  vrfClientKey: undefined,
-  vrfClientState: undefined,
+  gameStatePDA: undefined,
+  gameStateData: undefined,
   isLoading: false,
   message: "Play the game!",
 })
 
-// Custom hook to use the GameStateHome context
+// Custom hook to use the GameState context
 export const useGameState = () => useContext(GameStateContext)
 
 // Provider component to wrap around components that need access to the context
@@ -39,84 +39,89 @@ export const GameStateProvider = ({
   const { publicKey } = useWallet()
   const { fetchBalance } = useBalance()
 
-  const [vrfClientKey, setVrfClientKey] = useState<PublicKey | undefined>()
-  const [vrfClientState, setVrfClientState] = useState<any>()
-  const [isLoading, setIsLoading] = useState(false)
+  // Defining the state variables
+  const [gameStatePDA, setGameStatePDA] = useState<PublicKey | undefined>()
+  const [gameStateData, setGameStateData] = useState<any>()
   const [message, setMessage] = useState("Play the game!")
+  const [isLoading, setIsLoading] = useState(false)
 
+  // Function to reset game state
   const reset = () => {
-    setVrfClientKey(undefined)
-    setVrfClientState(undefined)
+    setGameStatePDA(undefined)
+    setGameStateData(undefined)
     setIsLoading(false)
     setMessage("Play the game!")
   }
 
-  const fetchClientState = async (clientKey: PublicKey) => {
-    const clientState = await program.account.gameState.fetch(clientKey)
-    console.log(clientState)
-    setVrfClientState(clientState)
-  }
+  // Function to fetch the game state
+  const fetchGameState = useCallback(async (gameStatePDA: PublicKey) => {
+    try {
+      const data = await program.account.gameState.fetch(gameStatePDA)
+      console.log(data)
+      setGameStateData(data)
+    } catch (error) {
+      console.error("Error fetching game state:", error)
+    }
+  }, [])
 
+  // Function to setup game state
   const setup = useCallback(async () => {
     if (!publicKey) {
       reset()
       return
     }
 
-    const [vrfClientKey] = anchor.web3.PublicKey.findProgramAddressSync(
+    const [gameStatePDA] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("GAME"), publicKey.toBytes()],
       program.programId
     )
-    setVrfClientKey(vrfClientKey)
+    setGameStatePDA(gameStatePDA)
 
-    try {
-      await fetchClientState(vrfClientKey)
-    } catch (error) {
-      console.log(error)
-    }
+    await fetchGameState(gameStatePDA)
   }, [publicKey])
 
   useEffect(() => {
     setup()
   }, [setup])
 
-  useEffect(() => {
-    if (!vrfClientKey) return
-
-    const handleAccountChange = async (accountInfo: AccountInfo<Buffer>) => {
-      let vrfClientState
+  // Function to handle account change
+  const handleAccountChange = useCallback(
+    async (accountInfo: AccountInfo<Buffer>) => {
+      let data
       try {
-        vrfClientState = program.coder.accounts.decode(
-          "gameState",
-          accountInfo.data
-        )
+        data = program.coder.accounts.decode("gameState", accountInfo.data)
       } catch (error) {
-        console.log(error)
+        console.error("Error decoding account data:", error)
       }
 
-      if (!vrfClientState) {
-        setVrfClientState(undefined)
+      // If the account data is undefined, reset the game state
+      if (!data) {
+        setGameStateData(undefined)
         setMessage("Play the game!")
         return
       }
 
-      if (vrfClientState.result == 0 && vrfClientState.guess == 0) {
-        setVrfClientState(vrfClientState)
-      } else if (vrfClientState.result == 0) {
+      if (data.result == 0 && data.guess == 0) {
+        setGameStateData(data)
+      } else if (data.result == 0) {
         setIsLoading(true)
       } else {
         setIsLoading(false)
-        setMessage(
-          vrfClientState.result == vrfClientState.guess
-            ? "You won!"
-            : "You lost!"
-        )
+        const tossResult = data.result == 1 ? "Heads" : "Tails"
+        const winOrLose =
+          data.result == data.guess ? "You won 😄" : "You lost 😕"
+        setMessage(`${tossResult}! ${winOrLose}`)
         await fetchBalance()
       }
-    }
+    },
+    [gameStatePDA, gameStateData]
+  )
+
+  useEffect(() => {
+    if (!gameStatePDA) return
 
     const subscriptionId = connection.onAccountChange(
-      vrfClientKey,
+      gameStatePDA,
       handleAccountChange
     )
 
@@ -124,13 +129,13 @@ export const GameStateProvider = ({
       // Unsubscribe from the account change subscription when the component unmounts
       connection.removeAccountChangeListener(subscriptionId)
     }
-  }, [vrfClientKey, vrfClientState])
+  }, [gameStatePDA, gameStateData])
 
   return (
     <GameStateContext.Provider
       value={{
-        vrfClientKey,
-        vrfClientState,
+        gameStatePDA,
+        gameStateData,
         isLoading,
         message,
       }}

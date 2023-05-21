@@ -6,10 +6,48 @@ import CloseButton from "@/components/CloseButton"
 import CoinTossButtons from "@/components/CoinTossButtons"
 import { useGameState } from "@/contexts/GameStateContext"
 import { useWallet } from "@solana/wallet-adapter-react"
+import { BeatLoader } from "react-spinners"
 
 export default function Home() {
-  const { isLoading, message, vrfClientState } = useGameState()
+  const { isLoading, message, gameStateData } = useGameState()
   const { publicKey } = useWallet()
+
+  const renderMessage = () =>
+    isLoading ? (
+      <VStack>
+        <Text>Waiting for Oracle to respond...</Text>
+        <BeatLoader size={16} />
+      </VStack>
+    ) : (
+      <Text>{message}</Text>
+    )
+
+  const renderGameState = () => {
+    if (gameStateData) {
+      return (
+        <>
+          <Balance />
+          <CoinTossButtons />
+          <CloseButton />
+        </>
+      )
+    } else {
+      return <InitPlayerButton />
+    }
+  }
+
+  const renderGame = () => {
+    if (publicKey) {
+      return (
+        <>
+          {renderMessage()}
+          {renderGameState()}
+        </>
+      )
+    } else {
+      return <Text>Connect your wallet to play</Text>
+    }
+  }
 
   return (
     <Box>
@@ -21,27 +59,7 @@ export default function Home() {
       <VStack justifyContent="center" alignItems="center" height="75vh">
         <VStack>
           <Heading>Coin Flip</Heading>
-
-          {publicKey ? (
-            <>
-              {isLoading ? (
-                <Text>Waiting for Oracle to respond...</Text>
-              ) : (
-                <Text>{message}</Text>
-              )}
-              {vrfClientState ? (
-                <>
-                  <Balance />
-                  <CoinTossButtons />
-                  <CloseButton />
-                </>
-              ) : (
-                <InitPlayerButton />
-              )}
-            </>
-          ) : (
-            <Text>Connect your wallet to play</Text>
-          )}
+          {renderGame()}
         </VStack>
       </VStack>
     </Box>

@@ -14,6 +14,7 @@ export const useSwitchboard = () => {
       const switchboardProgram = await sbv2.SwitchboardProgram.fromProvider(
         provider
       )
+
       const [queueAccount, queueAccountData] = await sbv2.QueueAccount.load(
         switchboardProgram,
         "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"

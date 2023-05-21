@@ -1,28 +1,20 @@
-import {
-  BorshInstructionCoder,
-  Program,
-  AnchorProvider,
-  Idl,
-  setProvider,
-} from "@coral-xyz/anchor"
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet"
+import { Program, AnchorProvider, Idl, setProvider } from "@coral-xyz/anchor"
 import { IDL, Vrf } from "../idl/vrf"
-import {
-  clusterApiUrl,
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-} from "@solana/web3.js"
-import * as sbv2 from "@switchboard-xyz/solana.js"
+import { clusterApiUrl, Connection, Keypair, PublicKey } from "@solana/web3.js"
 
 // Create a connection to the devnet cluster
 export const connection = new Connection(clusterApiUrl("devnet"), {
   commitment: "confirmed",
 })
 
-// Create a placeholder wallet to set up AnchorProvider
-const wallet = new NodeWallet(Keypair.generate())
+const MockWallet = {
+  publicKey: Keypair.generate().publicKey,
+  signTransaction: () => Promise.reject(),
+  signAllTransactions: () => Promise.reject(),
+}
+
+// Create a placeholder AnchorWallet to set up AnchorProvider without connecting a wallet
+const wallet = MockWallet
 
 // Create an Anchor provider
 export const provider = new AnchorProvider(connection, wallet, {})
@@ -42,38 +34,3 @@ export const [solVaultPDA] = PublicKey.findProgramAddressSync(
   [Buffer.from("VAULT")],
   program.programId
 )
-
-// // Keypair used to create new VRF account during setup
-// const vrfSecret = Keypair.generate()
-
-// // PDA for VrfClientState Account, VRF Account is authority of this account
-// const [vrfClientKey] = PublicKey.findProgramAddressSync(
-//   [Buffer.from("CLIENTSEED"), vrfSecret.publicKey.toBytes()],
-//   program.programId
-// )
-
-// // PDA for VrfClientState Account, VRF Account is authority of this account
-// const [solVaultPDA] = PublicKey.findProgramAddressSync(
-//   [Buffer.from("VAULT")],
-//   program.programId
-// )
-
-// const vrfIxCoder = new BorshInstructionCoder(program.idl)
-
-// // Callback to consume randomness (the instruction that the oracle CPI's back into our program)
-// const vrfClientCallback: sbv2.Callback = {
-//   programId: program.programId,
-//   accounts: [
-//     // ensure all accounts in consumeRandomness are populated
-//     { pubkey: solVaultPDA, isSigner: false, isWritable: true },
-//     { pubkey: vrfClientKey, isSigner: false, isWritable: true },
-//     { pubkey: vrfSecret.publicKey, isSigner: false, isWritable: false },
-//     { pubkey: wallet.publicKey, isSigner: false, isWritable: true },
-//     {
-//       pubkey: SystemProgram.programId,
-//       isSigner: false,
-//       isWritable: false,
-//     },
-//   ],
-//   ixData: vrfIxCoder.encode("consumeRandomness", ""), // pass any params for instruction here
-// }
