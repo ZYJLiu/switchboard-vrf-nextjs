@@ -6,7 +6,7 @@ import CloseButton from "@/components/CloseButton"
 import CoinTossButtons from "@/components/CoinTossButtons"
 import { useGameState } from "@/contexts/GameStateContext"
 import { useWallet } from "@solana/wallet-adapter-react"
-import { BeatLoader } from "react-spinners"
+import { BeatLoader, PacmanLoader } from "react-spinners"
 
 export default function Home() {
   const { isLoading, message, gameStateData } = useGameState()
@@ -16,7 +16,8 @@ export default function Home() {
     isLoading ? (
       <VStack>
         <Text>Waiting for Oracle to respond...</Text>
-        <BeatLoader size={16} />
+        <PacmanLoader size={24} speedMultiplier={3} />
+        <BeatLoader size={20} speedMultiplier={3} />
       </VStack>
     ) : (
       <Text>{message}</Text>
