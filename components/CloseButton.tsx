@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useCallback, useState } from "react"
 import { Button } from "@chakra-ui/react"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { program, connection } from "@/utils/anchor"
@@ -9,17 +9,12 @@ const CloseButton = () => {
   const { gameStatePDA } = useGameState()
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleClick = async () => {
+  const handleClick = useCallback(async () => {
     if (!publicKey || !gameStatePDA) return
 
     setIsLoading(true)
 
     try {
-      // const [gameStatePDA] = PublicKey.findProgramAddressSync(
-      //   [Buffer.from("GAME"), publicKey.toBytes()],
-      //   program.programId
-      // )
-
       const tx = await program.methods
         .close()
         .accounts({
@@ -29,13 +24,13 @@ const CloseButton = () => {
         .transaction()
 
       const txSig = await sendTransaction(tx, connection)
-      console.log("Your transaction signature", txSig)
+      console.log(`https://explorer.solana.com/tx/${txSig}?cluster=devnet`)
     } catch (error) {
       console.log(error)
     } finally {
-      setIsLoading(false) // set loading state back to false
+      setIsLoading(false)
     }
-  }
+  }, [publicKey, gameStatePDA])
 
   return (
     <Button onClick={handleClick} isLoading={isLoading}>

@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -60,7 +60,7 @@ export const GameStateProvider = ({
       console.log(data)
       setGameStateData(data)
     } catch (error) {
-      console.error("Error fetching game state:", error)
+      console.log("Error fetching game state:", error)
     }
   }, [])
 

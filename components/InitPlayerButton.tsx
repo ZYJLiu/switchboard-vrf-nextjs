@@ -1,38 +1,31 @@
-import React, { useEffect, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Button } from "@chakra-ui/react"
 import { BorshInstructionCoder } from "@coral-xyz/anchor"
-import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js"
+import { Keypair, SystemProgram, Transaction } from "@solana/web3.js"
 import * as sbv2 from "@switchboard-xyz/solana.js"
 import { useWallet } from "@solana/wallet-adapter-react"
-import { useSwitchboard } from "@/hooks/useSwitchBoard"
 import { program, solVaultPDA, connection } from "@/utils/anchor"
 import { useGameState } from "@/contexts/GameStateContext"
+import { useSwitchboard } from "@/contexts/SwitchBoardContext"
 
 const InitPlayerButton = () => {
   const { publicKey, sendTransaction } = useWallet()
   const { gameStatePDA } = useGameState()
-  const switchboard = useSwitchboard()
+  const { switchboard } = useSwitchboard()
   const [isLoading, setIsLoading] = useState(false)
-  const [isInitializing, setIsInitializing] = useState(true)
 
-  useEffect(() => {
-    setIsInitializing(!switchboard)
-  }, [switchboard])
+  const anchorProgramInstructionCoder = useMemo(
+    () => new BorshInstructionCoder(program.idl),
+    []
+  )
 
-  const handleClick = async () => {
+  const handleClick = useCallback(async () => {
     if (!switchboard || !publicKey || !gameStatePDA) return
 
     setIsLoading(true)
 
     try {
       const vrfAccountKeypair = Keypair.generate()
-
-      // const [gameStatePDA] = PublicKey.findProgramAddressSync(
-      //   [Buffer.from("GAME"), publicKey.toBytes()],
-      //   program.programId
-      // )
-
-      const vrfIxCoder = new BorshInstructionCoder(program.idl)
 
       const vrfCallbackInstruction: sbv2.Callback = {
         programId: program.programId,
@@ -51,7 +44,7 @@ const InitPlayerButton = () => {
             isWritable: false,
           },
         ],
-        ixData: vrfIxCoder.encode("consumeRandomness", ""),
+        ixData: anchorProgramInstructionCoder.encode("consumeRandomness", ""),
       }
 
       const [VrfAccount, TransactionObject] =
@@ -102,13 +95,13 @@ const InitPlayerButton = () => {
     } finally {
       setIsLoading(false) // set loading state back to false
     }
-  }
+  }, [publicKey, gameStatePDA, switchboard])
 
   return (
     <Button
       onClick={handleClick}
-      isLoading={isLoading || isInitializing}
-      loadingText={isInitializing ? "Loading..." : null}
+      isLoading={isLoading || !switchboard}
+      loadingText={!switchboard ? "Loading..." : null}
     >
       Init Player
     </Button>
