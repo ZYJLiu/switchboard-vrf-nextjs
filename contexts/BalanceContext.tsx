@@ -32,13 +32,14 @@ export const BalanceProvider = ({
 }: {
   children: React.ReactNode
 }) => {
-  // State variable to hold the balance values
-  const [vaultBalance, setVaultBalance] = useState(0)
-  const [playerBalance, setPlayerBalance] = useState(0)
-
   const { publicKey } = useWallet()
 
-  // Fetch balance
+  // Game SOL Vault balance
+  const [vaultBalance, setVaultBalance] = useState(0)
+  // Player balance
+  const [playerBalance, setPlayerBalance] = useState(0)
+
+  // Fetch balances
   const fetchBalance = useCallback(async () => {
     if (!publicKey) return
     const vaultBalance = await provider.connection.getBalance(solVaultPDA)

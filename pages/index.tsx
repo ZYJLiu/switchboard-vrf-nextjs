@@ -1,54 +1,57 @@
 import { VStack, Box, Flex, Spacer, Heading, Text } from "@chakra-ui/react"
+import { BeatLoader, PacmanLoader } from "react-spinners"
+import { PublicKey } from "@solana/web3.js"
 import WalletMultiButton from "@/components/WalletMultiButton"
 import Balance from "@/components/Balance"
 import InitPlayerButton from "@/components/InitPlayerButton"
 import CloseButton from "@/components/CloseButton"
 import CoinTossButtons from "@/components/CoinTossButtons"
-import { useGameState } from "@/contexts/GameStateContext"
 import { useWallet } from "@solana/wallet-adapter-react"
-import { BeatLoader, PacmanLoader } from "react-spinners"
+import { useGameState } from "@/contexts/GameStateContext"
+import { GameState } from "@/utils/anchor"
 
-export default function Home() {
+interface GameStateProps {
+  gameStateData: GameState | undefined
+}
+
+interface GameProps extends GameStateProps {
+  isLoading: boolean
+  message: string
+  publicKey: PublicKey | null
+}
+
+const LoadingIndicator = () => (
+  <VStack>
+    <Text>Waiting for Oracle to respond...</Text>
+    <PacmanLoader size={24} speedMultiplier={2.5} />
+    <BeatLoader size={20} />
+  </VStack>
+)
+
+const GameState = ({ gameStateData }: GameStateProps) =>
+  gameStateData ? (
+    <>
+      <Balance />
+      <CoinTossButtons />
+      <CloseButton />
+    </>
+  ) : (
+    <InitPlayerButton />
+  )
+
+const Game = ({ isLoading, message, gameStateData, publicKey }: GameProps) =>
+  publicKey ? (
+    <>
+      {isLoading ? <LoadingIndicator /> : <Text>{message}</Text>}
+      <GameState gameStateData={gameStateData} />
+    </>
+  ) : (
+    <Text>Connect your wallet to play</Text>
+  )
+
+const Home = () => {
   const { isLoading, message, gameStateData } = useGameState()
   const { publicKey } = useWallet()
-
-  const renderMessage = () =>
-    isLoading ? (
-      <VStack>
-        <Text>Waiting for Oracle to respond...</Text>
-        <PacmanLoader size={24} speedMultiplier={2.5} />
-        <BeatLoader size={20} />
-      </VStack>
-    ) : (
-      <Text>{message}</Text>
-    )
-
-  const renderGameState = () => {
-    if (gameStateData) {
-      return (
-        <>
-          <Balance />
-          <CoinTossButtons />
-          <CloseButton />
-        </>
-      )
-    } else {
-      return <InitPlayerButton />
-    }
-  }
-
-  const renderGame = () => {
-    if (publicKey) {
-      return (
-        <>
-          {renderMessage()}
-          {renderGameState()}
-        </>
-      )
-    } else {
-      return <Text>Connect your wallet to play</Text>
-    }
-  }
 
   return (
     <Box>
@@ -60,9 +63,16 @@ export default function Home() {
       <VStack justifyContent="center" alignItems="center" height="75vh">
         <VStack>
           <Heading>Coin Flip</Heading>
-          {renderGame()}
+          <Game
+            isLoading={isLoading}
+            message={message}
+            gameStateData={gameStateData}
+            publicKey={publicKey}
+          />
         </VStack>
       </VStack>
     </Box>
   )
 }
+
+export default Home

@@ -5,6 +5,7 @@ import { BalanceProvider } from "@/contexts/BalanceContext"
 import { GameStateProvider } from "@/contexts/GameStateContext"
 import { SwitchboardProvider } from "@/contexts/SwitchBoardContext"
 
+// Wrap the page component with the context providers (global state)
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ChakraProvider>

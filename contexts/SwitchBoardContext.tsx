@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -38,15 +38,18 @@ export const SwitchboardProvider = ({
     queueAccountData: sbv2.types.OracleQueueAccountData
   } | null>(null)
 
-  // Fetch switchboard
   const fetchSwitchboard = useCallback(async () => {
+    // Get switchboard program
     const switchboardProgram = await sbv2.SwitchboardProgram.fromProvider(
       provider
     )
+
+    // Get switchboard queue account and queue account data (deserialized account data)
     const [queueAccount, queueAccountData] = await sbv2.QueueAccount.load(
       switchboardProgram,
-      "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX"
+      "uPeRMdfPmrPqgRWSrjAnAkH78RqAhe5kXoW6vBYRqFX" // DEVNET_PERMISSIONLESS_QUEUE
     )
+
     setSwitchboard({
       program: switchboardProgram,
       queueAccount: queueAccount,
