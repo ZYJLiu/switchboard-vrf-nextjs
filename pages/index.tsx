@@ -20,6 +20,7 @@ interface GameProps extends GameStateProps {
   publicKey: PublicKey | null
 }
 
+// Component to display loading state
 const LoadingIndicator = () => (
   <VStack>
     <Text>Waiting for Oracle to respond...</Text>
@@ -28,6 +29,8 @@ const LoadingIndicator = () => (
   </VStack>
 )
 
+// If the player has a game state account, display balances, coin toss buttons, and close button
+// Otherwise, display the init player button
 const GameState = ({ gameStateData }: GameStateProps) =>
   gameStateData ? (
     <>
@@ -39,6 +42,7 @@ const GameState = ({ gameStateData }: GameStateProps) =>
     <InitPlayerButton />
   )
 
+// Main Game component
 const Game = ({ isLoading, message, gameStateData, publicKey }: GameProps) =>
   publicKey ? (
     <>
@@ -49,6 +53,7 @@ const Game = ({ isLoading, message, gameStateData, publicKey }: GameProps) =>
     <Text>Connect your wallet to play</Text>
   )
 
+// Home component contains all other components and provides the structure of the page
 const Home = () => {
   const { isLoading, message, gameStateData } = useGameState()
   const { publicKey } = useWallet()
